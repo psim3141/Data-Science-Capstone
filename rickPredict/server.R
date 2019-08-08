@@ -18,6 +18,12 @@ dt5s<- readRDS("www/dt5s.RData")
 shinyServer(function(input, output) {
 
     displayText <- reactiveVal(NULL)
+    verboseText <- reactiveVal(NULL)
+    
+    
+    output$title_panel <- renderText({
+        switch(input$verbose, "TRUE"="What is happening?")
+    })
     
     output$p1 <- renderText({
         displayText()[1]
@@ -31,14 +37,38 @@ shinyServer(function(input, output) {
         displayText()[3]
     })
     
+    output$v1 <- renderText({
+        if (is.null(verboseText())) return(NULL)
+        paste(verboseText()$frequency[1],"\n",
+        round(verboseText()$score[1],3),"\n",
+        1+str_count(verboseText()$start[1],boundary("word")),
+        "-gram",sep="")
+    })
+    
+    output$v2 <- renderText({
+        if (is.null(verboseText())) return(NULL)
+        paste(verboseText()$frequency[2],"\n",
+        round(verboseText()$score[2],3),"\n",
+        1+str_count(verboseText()$start[2],boundary("word")),
+        "-gram",sep="")
+    })
+    
+    output$v3 <- renderText({
+        if (is.null(verboseText())) return(NULL)
+        paste(verboseText()$frequency[3],"\n",
+        round(verboseText()$score[3],3),"\n",
+        1+str_count(verboseText()$start[3],boundary("word")),
+        "-gram",sep="")
+    })
+    
     output$size <- renderText({
         ## this is a crazy subsetting construct, but it works
         validate(
             need(str_sub(input$tin, -1, -1)==" ",
                  rbind(na.omit(
-                     nextWord(word(input$tin,1,-2))$end[
+                     nextWord(word(input$tin,1,-2),alpha=input$alpha)$end[
                          grep(paste("^",word(tolower(input$tin),-1,-1),sep=""),
-                              nextWord(word(input$tin,1,-2))$end
+                              nextWord(word(input$tin,1,-2),alpha=input$alpha)$end
                               )[1]
                          ]
                      ),
@@ -50,20 +80,27 @@ shinyServer(function(input, output) {
                  )[1]
             )
         )
-        
-        pw <- predWrap(input$tin,0.4,count=3)
-        print(pw)
-        displayText(pw)
+        pw <- predWrap(input$tin,alpha=input$alpha,count=3,verbose=input$verbose)
+        if(input$verbose){
+            displayText(pw$end)
+            verboseText(pw)
+        }else displayText(pw)
         ""
     })
     
-    predWrap <- function(...,count=3){
-        unique(setorder(nextWord(...),-score,na.last = T)$end)[1:count]
+    predWrap <- function(...,count=3,verbose=FALSE){
+        if(verbose){
+            unique(setorder(nextWord(...),-score,na.last = T),by="end")[1:count]   
+        } else{
+            unique(setorder(nextWord(...),-score,na.last = T)$end)[1:count]
+        }
     }
     
     nextWord <- function(phrase,alpha=0.4,count=3){
         loc <- "ISO8859-1" #localeToCharset()
-        phrase <- strsplit(tolower(gsub("[[:punct:-[']]]|[0-9]+","", iconv(phrase, from = loc, to = 'ASCII//TRANSLIT'))),"[ ]+")
+        phrase <- strsplit(tolower(
+            gsub("[!\"#$%&()*+,./:;<=>?@\\^_`{|}~]|[0-9]+","",
+                 iconv(phrase, from = loc, to = 'ASCII//TRANSLIT'))),"[ ]+")
         phrase <- word(paste(NA,NA,NA,NA,paste((phrase)[[1]],collapse=" ")),-4,-1)
         
         w5 <- dt5s[start==phrase,]

@@ -10,7 +10,7 @@ library(shiny)
 shinyUI(fluidPage(theme = "bootstrap.css",
     
     titlePanel("rickPredict"),
-        tabsetPanel(
+        tabsetPanel(id="tabs",
                tabPanel("What does it do?",
                         fluidRow(column(9,
                         br(),
@@ -44,10 +44,19 @@ shinyUI(fluidPage(theme = "bootstrap.css",
                         p("Patrick has a background in physics, occasionally co-hosts a German language movie podcast,",
                           a(href="https://rydeorwrong.podcaster.de","[Link]"),
                           ", and is obviously way too fond of things that vaguely qualify as puns."),
-                        a(href="https://github.com/psim3141","[Patrick on GitHub]"),
-                        br()))), 
-                        hr(),br(), type="tabs"
-    ),
+                        p(a(href="https://github.com/psim3141","[Patrick on GitHub]")),
+                        br()))),
+               tabPanel(title = uiOutput("title_panel"),
+                        conditionalPanel(
+                          condition="input.verbose",
+                          br(),
+                          p("You activated expert mode! This lets you peek a little under the hood of the model."),
+                          p("The new boxes show you for each of the top three predictions how often that specific N-gram appeared
+                   in the sample of the corpus that was used to build the data tables, what it's assigned score is for
+                   the given value of alpha (0.4 is default), and what the order of the N-gram is."),
+                          br())
+                        )
+               ),hr(),br(), 
     fluidRow(
         #sidebarPanel(
         #    h3("Current word:"),
@@ -68,6 +77,20 @@ shinyUI(fluidPage(theme = "bootstrap.css",
                 p("|",align="center"),
                 strong(textOutput("p3"),align="center")
             ),
+            conditionalPanel(
+              condition="input.verbose",
+              br(),#h6("Frequency/Score/N-gram order"),
+              splitLayout(
+                style = "width: 350px; background-color:#f0f0f0; color:black",
+                cellWidths = c(100,5,100,5,100),
+                cellArgs = list(style = "padding: 6px"),
+                strong(verbatimTextOutput("v1"),align="left"),
+                p(" ",align="center"),
+                strong(verbatimTextOutput("v2"),align="left"),
+                p(" ",align="center"),
+                strong(verbatimTextOutput("v3"),align="left")
+              )
+            ),
             textInput("tin","",width = 350,placeholder = "Type your text here"),
             #plotOutput("distPlot"),
             
@@ -78,9 +101,28 @@ shinyUI(fluidPage(theme = "bootstrap.css",
                 style = "width: 350px; background-color:#f0f0f0",
                 cellWidths = 350,
                 cellArgs = list(style = "padding: 6px"),
-                textOutput("size"))
+                textOutput("size")
+                ),
+            splitLayout(
+              cellWidths = c(150,125,70),
+              cellArgs = c(NULL,NULL,list(style = "margin-top: 15px")),
+              checkboxInput("verbose","Expert mode"),
+              conditionalPanel(
+                condition="input.verbose",
+                p("Choose alpha:")
+              ),
+              conditionalPanel(
+                condition="input.verbose",
+                numericInput("alpha",NULL,min=0.1,max=1,value=0.4,step=0.1)
+              )
             )
-        )        ,br(),hr(),
+            
+            ),
+        column(2
+               
+        
+               
+        ))        ,br(),hr(),
     p("Copyright 2019, Patrick Simon. CSS theme courtesy of ",
       a(href="https://bootstrap.build","Bootstrap.Build"),"")
     )

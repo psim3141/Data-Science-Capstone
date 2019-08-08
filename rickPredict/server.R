@@ -1,10 +1,8 @@
 #
-# This is the server logic of a Shiny web application. You can run the
-# application by clicking 'Run App' above.
+# rickPredict - a Word Prediction app
 #
-# Find out more about building applications with Shiny here:
-#
-#    http://shiny.rstudio.com/
+# Developed by Patrick Simon, August 2019
+# for the Capstone project of the JHU Data Science Specialization
 #
 
 library(shiny)
@@ -16,7 +14,6 @@ dt2s<- readRDS("www/dt2s.RData")
 dt3s<- readRDS("www/dt3s.RData")
 dt4s<- readRDS("www/dt4s.RData")
 dt5s<- readRDS("www/dt5s.RData")
-print("read")
 
 shinyServer(function(input, output) {
 
@@ -35,9 +32,23 @@ shinyServer(function(input, output) {
     })
     
     output$size <- renderText({
-        print("obs")
+        ## this is a crazy subsetting construct, but it works
         validate(
-            need(str_sub(input$tin, -1, -1)==" ",dt1s$end[grep(paste("^",word(tolower(input$tin),-1,-1),sep=""),dt1s$end)[1]])   
+            need(str_sub(input$tin, -1, -1)==" ",
+                 rbind(na.omit(
+                     nextWord(word(input$tin,1,-2))$end[
+                         grep(paste("^",word(tolower(input$tin),-1,-1),sep=""),
+                              nextWord(word(input$tin,1,-2))$end
+                              )[1]
+                         ]
+                     ),
+                     dt1s$end[
+                         grep(paste("^",word(tolower(input$tin),-1,-1),sep=""),
+                              dt1s$end
+                              )[1]
+                         ]
+                 )[1]
+            )
         )
         
         pw <- predWrap(input$tin,0.4,count=3)
@@ -51,7 +62,7 @@ shinyServer(function(input, output) {
     }
     
     nextWord <- function(phrase,alpha=0.4,count=3){
-        loc <- localeToCharset()
+        loc <- "ISO8859-1" #localeToCharset()
         phrase <- strsplit(tolower(gsub("[[:punct:-[']]]|[0-9]+","", iconv(phrase, from = loc, to = 'ASCII//TRANSLIT'))),"[ ]+")
         phrase <- word(paste(NA,NA,NA,NA,paste((phrase)[[1]],collapse=" ")),-4,-1)
         

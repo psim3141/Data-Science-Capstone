@@ -64,6 +64,7 @@ shinyServer(function(input, output) {
     output$size <- renderText({
         ## this is a crazy subsetting construct, but it works
         validate(
+            suppressWarnings(
             need(str_sub(input$tin, -1, -1)==" ",
                  rbind(na.omit(
                      nextWord(word(input$tin,1,-2),alpha=input$alpha)$end[
@@ -78,7 +79,7 @@ shinyServer(function(input, output) {
                               )[1]
                          ]
                  )[1]
-            )
+            ))
         )
         pw <- predWrap(input$tin,alpha=input$alpha,count=3,verbose=input$verbose)
         if(input$verbose){

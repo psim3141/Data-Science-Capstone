@@ -47,14 +47,15 @@ shinyUI(fluidPage(theme = "bootstrap.css",
                         p(a(href="https://github.com/psim3141","[Patrick on GitHub]")),
                         br()))),
                tabPanel(title = uiOutput("title_panel"),
+                        fluidRow(column(9,
                         conditionalPanel(
                           condition="input.verbose",
                           br(),
                           p("You activated expert mode! This lets you peek a little under the hood of the model."),
                           p("The new boxes show you for each of the top three predictions how often that specific N-gram appeared
-                   in the sample of the corpus that was used to build the data tables, what it's assigned score is for
+                   in the sample of the corpus that was used to build the data tables, what its assigned score is for
                    the given value of alpha (0.4 is default), and what the order of the N-gram is."),
-                          br())
+                          br())))
                         )
                ),hr(),br(), 
     fluidRow(
@@ -104,7 +105,7 @@ shinyUI(fluidPage(theme = "bootstrap.css",
                 textOutput("size")
                 ),
             splitLayout(
-              cellWidths = c(150,125,70),
+              cellWidths = c(150,123,67),
               cellArgs = c(NULL,NULL,list(style = "margin-top: 15px")),
               checkboxInput("verbose","Expert mode"),
               conditionalPanel(
